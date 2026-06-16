@@ -2,11 +2,18 @@
 pragma solidity ^0.8.20;
 
 interface IERC20 {
+    /// @notice transfer - core operation
     function transfer(address to, uint256 amount) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
 }
 
+/// @title MultisigLite
+/// @notice Core contract for MultisigLite on Arc Network
+/// @dev Built with Foundry, deployed on Arc testnet (Chain ID: 5042002)
 contract MultisigLite {
+    /// @notice Contract version
+    string public constant VERSION = "1.1.0";
+
     IERC20 public immutable usdc;
     address[] public signers;
     uint256 public required;
@@ -35,22 +42,26 @@ contract MultisigLite {
 
     modifier onlySigner() { require(isSigner[msg.sender], "NOT_SIGNER"); _; }
 
+    /// @notice addSigner - core operation
     function addSigner(address s) external onlySigner {
         require(!isSigner[s], "ALREADY");
         signers.push(s); isSigner[s] = true;
     }
 
+    /// @notice setRequired - core operation
     function setRequired(uint256 r) external onlySigner {
         require(r > 0 && r <= signers.length, "BAD_REQ");
         required = r;
     }
 
+    /// @notice propose - core operation
     function propose(address to, uint256 amount) external onlySigner returns (uint256) {
         txs.push(Tx(to, amount, 0, false));
         emit TxProposed(txs.length - 1, to, amount);
         return txs.length - 1;
     }
 
+    /// @notice approve - core operation
     function approve(uint256 id) external onlySigner {
         require(!approved[id][msg.sender], "ALREADY_APPROVED");
         approved[id][msg.sender] = true;
